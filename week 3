@@ -1,0 +1,127 @@
+// Implement Dijkstra's Algorithm
+// Pandu Golla 16/05/2020
+
+#include<iostream>
+#include<stdlib.h>
+#include<iomanip>
+using namespace std;
+
+const int INFINITY=9999999; // define an INFINITY value
+const int MAX=50; // MAX number of nodes
+const int DENSITY1=20; // percentage of density 1 20%
+const int DENSITY2=40; // percentage of density 2 40%
+const int RANGE=10; // maximum distance RANGE
+
+// function to print graph as a matrix
+void print_graph(int G[MAX][MAX], int n) {
+
+   for (int i = 0; i < n; i++) { // iterates rows
+      for (int j = 0; j < n; j++) // interates columns     
+         cout << setw(2) << G[i][j]; // print path length from node i+1 to node j+1
+         
+      cout << endl; // new line
+   }   
+}
+
+// function to initialize graph and prints it
+void init(int G[MAX][MAX], int n, int density, int range) {
+
+   // initializes random seed
+   srand(clock());
+   
+   // iterates rows
+   for (int i = 0; i < n; i++) {
+      G[i][i] = 0; // for same node value is 0;
+      for (int j = i+1; j < n; j++)  // we use j equal to i because previous values for that row has been assigned previously    
+          if (rand() % 100 < density) // if the randowm value generated is less than density        
+            G[i][j] = G[j][i] = rand() % RANGE + 1; // assign a random value according to range
+          else // otherwise
+            G[i][j] = G[j][i] = 0; // we initialize to zero
+   }
+   
+   // prints graph represented as a matrix
+   print_graph(G, n);         
+}
+
+// function to compute Dijkstra algorithm to all nodes from start node and its average distance
+void dijkstra(int G[MAX][MAX],int n,int startnode) {
+   int cost[MAX][MAX],distance[MAX],pred[MAX]; // defines matriz of costs, array of distances and predecessor's array
+   int visited[MAX],count,mindistance,nextnode,i,j; // defines visited nodes array, and other variables
+   double avg = 0.0; // defines avg to calculate average distance
+   
+   for(i=0;i<n;i++) // for each row
+      for(j=0;j<n;j++) // and for each column inside
+         if(G[i][j]==0) // if there is no path define from node i+1 to node j+1
+            cost[i][j]=INFINITY; // set cost as infinity
+         else // otherwise
+            cost[i][j]=G[i][j]; // set cost as it direct distance value
+            
+   // for each node
+   for(i=0;i<n;i++) {
+      distance[i]=cost[startnode][i]; // initializes distance to node i+1 as the actual cost from startnode to it.
+      pred[i]=startnode; // initiaalizes predecessor node as the startnode
+      visited[i]=0; // set nodes as not visited
+   }
+   distance[startnode]=0; // sets distance to startnode as 0
+   visited[startnode]=1; // marks startnode as visited as it is the one to start from
+   count=1; // counts nodes
+
+   while(count<n-1) { // while there are remaining nodes is going to calculate the lower distance and its path setting the predecessor
+      mindistance=INFINITY; // initializes distance to INFINITY
+      // iterates all the nodes to find the minimum distance set for a non visited node
+      for(i=0;i<n;i++)
+         // if distance to that node is less than minimum distance and that node has not been visited yet
+         if(distance[i]<mindistance&&!visited[i]) {            
+            mindistance=distance[i]; // sets a new minimum distance
+            nextnode=i; // keeps memory of the node chosen
+         }
+         
+      visited[nextnode]=1; // marks node with minimum distance as visited
+      // for all nodes we calculate new distances if they are lesser than before
+      for(i=0;i<n;i++)
+         if(!visited[i]) // if that node has not been visited yet
+            // if distance from node chosen (minimum value) plus cost of going from it to the for node is less than previous distance
+            if(mindistance+cost[nextnode][i]<distance[i]) {
+               distance[i]=mindistance+cost[nextnode][i]; // updates the new lower distance
+               pred[i]=nextnode; // and sets the predecessor node for the minimum distance
+            }
+      count++; // iterates to another node more that could form the path
+   }
+   
+   count = 0; // set to 0 number of nodes with path from start node to calculate average distance
+   cout << endl << "From node " << startnode + 1; // prints startnode
+   // for each node
+   for(i=0;i<n;i++)
+      // if it is not the start node and its distance is not INFINITY (meaning there is no path to startnode)
+      if(i!=startnode && distance[i] != INFINITY) {
+         avg += static_cast<double>(distance[i]); // aggregates distance to calculate average
+         count++; // counts another node to calculate average
+         
+         cout<<"\ndistance to node "<<i+1<<"="<<distance[i]; // prints distance value from start node to this one         
+         cout<<"\nPath="<<i+1; // prints last node of the path
+         j=i; // keeps this node
+         do { // keeps printing predecessor node in path while...
+            j=pred[j]; // keeps previous node
+            cout<<"<-"<<j+1; // prints another predecessor node of the path until the start node
+         }while(j!=startnode); // ...while is not the start node
+      }
+   cout << endl; // prints new line
+   
+   // prints distance averages from start node
+   cout << "The distance averages from node " << startnode + 1 << " is " << avg/count << endl; 
+}
+
+// main function
+int main() {
+   int G[MAX][MAX]={{0}}; // defines graph as a matrix
+   int u=0; // selects start node
+   
+   cout << "For density 20%..." << endl; // prints for density 20%
+   init(G,MAX,DENSITY1,RANGE); // initializes graph for DENSITY1 in the RANGE of values for the distances and prints it
+   dijkstra(G,MAX,u); // calculates Dijkstra for the new graph with MAX number of nodes and start node u
+   cout << endl << endl << "For density 40%..." << endl;
+   init(G,MAX,DENSITY2,RANGE); // initializes graph for DENSITY1 in the RANGE of values for the distances and prints it
+   dijkstra(G,MAX,u); // calculates Dijkstra for the new graph with MAX number of nodes and start node u
+   
+   return 0;
+}
